@@ -8,6 +8,8 @@
 #include <string.h>
 #include "acsii.h"
 
+#define MAX_DEPTH 9
+
 char board[3][3];
 char PLAYER;
 char COMPUTER;
@@ -302,64 +304,115 @@ static int pickBestSpot() {
     return 0;
 }
 
-static int tryHard() {
+static int evaluateBoard() {
+    //check rows
     for (int i = 0; i < 3; i++) {
-		//check rows
-        if (board[i][0] == PLAYER && board[i][1] == PLAYER && board[i][2] == ' ') {
-            board[i][2] = COMPUTER;
-            return 1;
+        if (board[i][0] == board[i][1] && board[i][0] == board[i][2]) {
+            if (board[i][0] == COMPUTER) {
+                return 10;
+            }
+            else if (board[i][0] == PLAYER) {
+                return -10;
+            }
         }
-		if (board[i][1] == PLAYER && board[i][2] == PLAYER && board[i][0] == ' ') {
-			board[i][0] = COMPUTER;
-			return 1;
-		}
-        if (board[i][0] == PLAYER && board[i][2] == PLAYER && board[i][1] == ' ') {
-            board[i][1] = COMPUTER;
-            return 1;
-        }
-		//check columns
-		if (board[0][i] == PLAYER && board[1][i] == PLAYER && board[2][i] == ' ') {
-			board[2][i] = COMPUTER;
-			return 1;
-		}
-        if (board[1][i] == PLAYER && board[2][i] == PLAYER && board[0][i] == ' ') {
-            board[0][i] = COMPUTER;
-            return 1;
-        }
-		if (board[0][i] == PLAYER && board[2][i] == PLAYER && board[1][i] == ' ') {
-			board[1][i] = COMPUTER;
-			return 1;
-		}
     }
 
-	//check diagonals
-    if (board[0][0] == PLAYER && board[1][1] == PLAYER && board[2][2] == ' ') {
-        board[2][2] = COMPUTER;
-        return 1;
-    }
-    if (board[1][1] == PLAYER && board[2][2] == PLAYER && board[0][0] == ' ') {
-        board[0][0] = COMPUTER;
-        return 1;
-    }
-    if (board[0][0] == PLAYER && board[2][2] == PLAYER && board[1][1] == ' ') {
-        board[1][1] = COMPUTER;
-        return 1;
+    //check columns
+    for (int i = 0; i < 3; i++) {
+        if (board[0][i] == board[1][i] && board[0][i] == board[2][i]) {
+            if (board[0][i] == COMPUTER) {
+                return 10;
+            }
+            else if (board[0][i] == PLAYER) {
+                return -10;
+            }
+        }
     }
 
-    if (board[0][2] == PLAYER && board[1][1] == PLAYER && board[2][0] == ' ') {
-        board[2][0] = COMPUTER;
-        return 1;
+    //check diagonals
+    if (board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
+        if (board[0][0] == COMPUTER) {
+            return 10;
+        }
+        else if (board[0][0] == PLAYER) {
+            return -10;
+        }
     }
-    if (board[1][1] == PLAYER && board[2][0] == PLAYER && board[0][2] == ' ') {
-        board[0][2] = COMPUTER;
-        return 1;
-    }
-    if (board[0][2] == PLAYER && board[2][0] == PLAYER && board[1][1] == ' ') {
-        board[1][1] = COMPUTER;
-        return 1;
+
+    if (board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
+        if (board[0][2] == COMPUTER) {
+            return 10;
+        }
+        else if (board[0][2] == PLAYER) {
+            return -10;
+        }
     }
 
     return 0;
+}
+
+static int minimax(int depth, int isMaximizing) {
+    int score = evaluateBoard();
+
+    if (score == 10 || score == -10) {
+        return score;
+    }
+    if (checkFreeSpaces() == 0) {
+        return 0;
+    }
+
+    if (isMaximizing) {
+        int best = -1000;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = COMPUTER;
+                    best = (best > minimax(depth + 1, 0)) ? best : minimax(depth + 1, 0);
+                    board[i][j] = ' ';
+                }
+            }
+        }
+        return best;
+    }
+    else {
+        int best = 1000;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = PLAYER;
+                    best = (best < minimax(depth + 1, 1)) ? best : minimax(depth + 1, 1);
+                    board[i][j] = ' ';
+                }
+            }
+        }
+        return best;
+    }
+}
+
+static int findBestMove() {
+    int bestVal = -1000;
+    int bestMove[2] = { -1, -1 };
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            if (board[i][j] == ' ') {
+                board[i][j] = COMPUTER;
+                int moveVal = minimax(0, 0);
+                board[i][j] = ' ';
+                if (moveVal > bestVal) {
+                    bestMove[0] = i;
+                    bestMove[1] = j;
+                    bestVal = moveVal;
+                }
+            }
+        }
+    }
+    return bestMove[0] * 3 + bestMove[1]; 
+}
+
+static int tryHard() {
+    int bestMove = findBestMove();
+    board[bestMove / 3][bestMove % 3] = COMPUTER;
+    return 1;
 }
 
 void restBoard()
@@ -375,19 +428,38 @@ void restBoard()
 
 static void printDebugBoard() {
     printf("\nDEBUG: Current board state:\n");
-    printf("    0   1   2\n");
-    printf("  -------------\n");
+    printf("    0   1   2     Minimax Evaluation\n");
+    printf("  -------------   ------------------\n");
     for (int i = 0; i < 3; i++) {
         printf("%d |", i);
         for (int j = 0; j < 3; j++) {
-            printf(" %c |", board[i][j]);
+            printf(" %c |", board[i][j] == ' ' ? '-' : board[i][j]);
         }
-        printf("\n");
-        printf("  -------------\n");
+
+        if (difficulty == 4) {
+            printf("   ");
+            for (int j = 0; j < 3; j++) {
+                if (board[i][j] == ' ') {
+                    board[i][j] = COMPUTER;
+                    int eval = minimax(0, 0);
+                    board[i][j] = ' ';
+					if (eval == 10){
+                        printf(GRN " %2d " reset, eval);
+                    }
+                    else {
+                        printf(BLK " %2d " reset, eval);
+                    }
+                }
+                else {
+                    printf(RED "  X " reset);
+                }
+            }
+        }
+
+        printf("\n  -------------   ------------------\n");
     }
-
-
 }
+
 
 void printBoard(int padding_left)
 {
@@ -501,26 +573,27 @@ void computerMove()
     }
     else if (difficulty == 4) {
         //impossible
-        int moved = 0;
-         
+        int movedI = 0;
+
+
         if (tryHard()) {
-			moved = 1;
+            movedI = 1;
             return;
         }
         if (tryToWin()) {
-            moved = 1;
+            movedI = 1;
             return;
         }
         if (blockPlayerMove()) {
-            moved = 1;
+            movedI = 1;
             return;
         }
         if (pickBestSpot()) {
-            moved = 1;
+            movedI = 1;
             return;
         }
 
-        if (!moved) {
+        if (!movedI) {
             do {
                 x = rand() % 3;
                 y = rand() % 3;

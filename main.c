@@ -1,14 +1,18 @@
 /*
- * Main code base for small console game made by vivio2115 (Github) last updated on 10/02/2025.
+ * Main code base for small console game made by vivio2115 (Github) last updated on 12/02/2025.
  * Its free to use and its under MIT license.
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include "unistd.h"
 #include "acsii.h"
+#include "images.c"
+
 
 #define MAX_DEPTH 9
+#define STAT 1 //0 is for debug menu and all other things that are not that needed for player, 1 just stand for production ;)
 
 char board[3][3];
 char PLAYER;
@@ -38,15 +42,49 @@ static void printCenteredLine(const char* line, int console_width) {
     if (padding_left < 0) padding_left = 0;
     printf("%*s%s\n", padding_left, "", line);
 }
+
 static void printLogo() {
-    printCenteredLine(YEL" _______  ___   _______    _______  _______  _______    _______  _______  _______ ", console_width);
-    printCenteredLine(YEL"|       ||   | |       |  |       ||       ||       |  |       ||       ||       |", console_width);
-    printCenteredLine(YEL"|_     _||   | |    ___|  |_     _||   _   ||    ___|  |_     _||   _   ||    ___|", console_width);
-    printCenteredLine(YEL"  |   |  |   | |   |        |   |  |  |_|  ||   |        |   |  |  | |  ||   |___ ", console_width);
-    printCenteredLine(YEL"  |   |  |   | |   |        |   |  |       ||   |        |   |  |  |_|  ||    ___|", console_width);
-    printCenteredLine(YEL"  |   |  |   | |   |___     |   |  |   _   ||   |___     |   |  |       ||   |___ ", console_width);
-    printCenteredLine(YEL"  |___|  |___| |_______|    |___|  |__| |__||_______|    |___|  |_______||_______|", console_width);
+    printCenteredLine(YEL"   _______  ___   _______    _______  _______  _______    _______  _______  _______ ", console_width);
+    printCenteredLine(YEL"  |       ||   | |       |  |       ||       ||       |  |       ||       ||       |", console_width);
+    printCenteredLine(YEL"  |_     _||   | |    ___|  |_     _||   _   ||    ___|  |_     _||   _   ||    ___|", console_width);
+    printCenteredLine(YEL"    |   |  |   | |   |        |   |  |  |_|  ||   |        |   |  |  | |  ||   |___ ", console_width);
+    printCenteredLine(YEL"    |   |  |   | |   |        |   |  |       ||   |        |   |  |  |_|  ||    ___|", console_width);
+    printCenteredLine(YEL"    |   |  |   | |   |___     |   |  |   _   ||   |___     |   |  |       ||   |___ ", console_width);
+    printCenteredLine(YEL"    |___|  |___| |_______|    |___|  |__| |__||_______|    |___|  |_______||_______|", console_width);
     printf(reset"\n");
+}
+static void computerWinAcsii() {
+    printCenteredLine(" ____________________ ", console_width);
+	printCenteredLine("|                    |", console_width);
+	printCenteredLine("|  ________________  |", console_width);
+	printCenteredLine("| |                | |", console_width);
+	printCenteredLine("| |  COMPUTER WIN  | |", console_width);
+	printCenteredLine("| |________________| |", console_width);
+    printCenteredLine("|                    |", console_width);
+	printCenteredLine("|____________________|", console_width);
+    printf("\n");
+}
+static void playerWinAcsii() {
+    printCenteredLine(" ____________________ ", console_width);
+    printCenteredLine("|                    |", console_width);
+    printCenteredLine("|  ________________  |", console_width);
+    printCenteredLine("| |                | |", console_width);
+    printCenteredLine("| |   PLAYER WIN   | |", console_width);
+    printCenteredLine("| |________________| |", console_width);
+    printCenteredLine("|                    |", console_width);
+    printCenteredLine("|____________________|", console_width);
+    printf("\n");
+}
+static void drawAcsii() {
+    printCenteredLine(" ____________________ ", console_width);
+    printCenteredLine("|                    |", console_width);
+    printCenteredLine("|  ________________  |", console_width);
+    printCenteredLine("| |                | |", console_width);
+    printCenteredLine("| |  COMPUTER WIN  | |", console_width);
+    printCenteredLine("| |________________| |", console_width);
+    printCenteredLine("|                    |", console_width);
+    printCenteredLine("|____________________|", console_width);
+    printf("\n");
 }
 
 
@@ -55,25 +93,36 @@ int main()
     int padding_left = (console_width - board_width) / 2;
 
     printLogo();
-    printf(RED "Enable debug mode (y/n):" reset);
-    scanf_s(" %c", &debug, 1);
+    if (STAT == 0) {
+       printf(RED "Enable debug mode (y/n):" reset);
+       scanf_s(" %c", &debug, 1);
+	}
+	else {
+		debug = 'n';
+	}
     printf("Choose difficulty (1-3): \n");
     printf("1 - Easy\n");
     printf("2 - Medium\n");
     printf("3 - Hard\n");
 	printf("4 - Impossible\n");
+    if (STAT == 0) {
+        printf("5 - Something about program\n");
+    }
     while (1) {
         printf("Enter difficulty: ");
         if (scanf_s("%d", &difficulty) == 1) {
             if (difficulty == 1 || difficulty == 2 || difficulty == 3 || difficulty == 4) {
                 break;
             }
+            else if (difficulty == 5) {
+				catACSII();
+            }
             else {
-                printf(RED "[Invalid input]" reset " Please enter 1, 2, or 3.\n");
+                printf(RED "[Invalid input]" reset " Please enter 1, 2, 3 or 4.\n");
             }
         }
         else {
-            printf(RED "[Invalid input]" reset " Please enter a number between 1 and 3.\n");
+            printf(RED "[Invalid input]" reset " Please enter a number between 1 and 5.\n");
             while ((input = getchar()) != '\n' && input != EOF);
         }
     }
@@ -126,6 +175,29 @@ int main()
 
         char choice;
         while (1) {
+            printf("Do you want to see the board? (y/n): ");
+            scanf_s(" %c", &choice, 1);
+            if (choice == 'y' || choice == 'Y') {
+                printBoard((console_width - board_width) / 2);
+                printCenteredLine("Here is the board:", console_width);
+                if (winner == PLAYER) {
+                    printCenteredLine("The winner is: you", console_width);
+                }
+                else if (winner == COMPUTER) {
+                    printCenteredLine("The winner is: computer", console_width);
+                }
+                else {
+                    printCenteredLine("The game is a draw", console_width);
+                }
+                break;
+            }
+            else if (choice == 'n' || choice == 'N') {
+                clearScreen();
+                break;
+            }
+        }
+
+        while (1) {
             printf("Do you want to play again? (y/n): ");
             scanf_s(" %c", &choice, 1);
             if (choice == 'y' || choice == 'Y') {
@@ -134,11 +206,13 @@ int main()
             else if (choice == 'n' || choice == 'N') {
                 printf("Thanks for playing!\n");
                 printf("Press any key to exit...\n");
-				int ch = getchar();
-				ch = getchar();
+                int ch = getchar();
+                ch = getchar();
                 return 0;
             }
         }
+
+
     }
 
     return 0;
@@ -447,7 +521,7 @@ static void printDebugBoard() {
                         printf(GRN " %2d " reset, eval);
                     }
                     else {
-                        printf(BLK " %2d " reset, eval);
+                        printf(CYN " %2d " reset, eval);
                     }
                 }
                 else {
@@ -465,19 +539,27 @@ void printBoard(int padding_left)
 {
     clearScreen();
     printLogo();
+    printf("%*s+-----+-----+-----+\n", padding_left, "");
 
     for (int i = 0; i < 3; i++) {
-        printf("%*s     |       |      \n", padding_left, "");
-        printf("%*s  %c  |   %c   |  %c   \n", padding_left, "", board[i][0], board[i][1], board[i][2]);
-        printf("%*s     |       |      \n", padding_left, "");
+        printf("%*s|     |     |     |\n", padding_left, "");
+        printf("%*s|  %c  |  %c  |  %c  |\n", padding_left, "",
+            board[i][0] == ' ' ? ' ' : (board[i][0] == PLAYER ? 'X' : 'O'),
+            board[i][1] == ' ' ? ' ' : (board[i][1] == PLAYER ? 'X' : 'O'),
+            board[i][2] == ' ' ? ' ' : (board[i][2] == PLAYER ? 'X' : 'O'));
+        printf("%*s|     |     |     |\n", padding_left, "");
         if (i < 2) {
-            printf("%*s-----|-------|-----\n", padding_left, "");
+            printf("%*s+-----+-----+-----+\n", padding_left, "");
         }
     }
+    printf("%*s+-----+-----+-----+\n", padding_left, "");
+
     if (debug == 'y' || debug == 'Y') {
         printDebugBoard();
     }
 }
+
+
 
 int checkFreeSpaces()
 {
@@ -631,13 +713,55 @@ char checkWinner()
 
 void printWinner(char winner)
 {
+    const int flashCount = 3;
+	const int flashDelay = 400000;
+
     if (winner == PLAYER) {
-        printf("Player won!\n");
+		clearScreen();
+		printLogo();
+		playerWinAcsii();
+        for (int i = 0; i < flashCount; i++) {
+			printf(CYN);
+			printCenteredLine("Player won!", console_width);
+			printf("\n"reset);
+			usleep(flashDelay);
+			clearScreen();
+			printLogo();
+			playerWinAcsii();
+			usleep(flashDelay);
+        }
+		printCenteredLine("Player won!\n", console_width);
     }
     else if (winner == COMPUTER) {
-        printf("Computer won!\n");
+        clearScreen();
+        printLogo();
+        computerWinAcsii();
+        for (int i = 0; i < flashCount; i++) {
+            printf(CYN);
+            printCenteredLine("Computer won!" , console_width);
+            printf("\n"reset);
+            usleep(flashDelay);
+            clearScreen();
+            printLogo();
+            computerWinAcsii();
+            usleep(flashDelay);
+        }
+        printCenteredLine("Computer won!\n", console_width);
     }
     else {
-        printf("Draw!\n");
+		clearScreen();
+		printLogo();
+		drawAcsii();
+		for (int i = 0; i < flashCount; i++) {
+            printf(CYN);
+			printCenteredLine("It's a draw!", console_width);
+            printf("\n"reset);
+			usleep(flashDelay);
+            clearScreen();
+			printLogo();
+			drawAcsii();
+			usleep(flashDelay);
+		}
+		printCenteredLine("It's a draw!\n", console_width);
     }
 }

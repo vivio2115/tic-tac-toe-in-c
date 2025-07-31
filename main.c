@@ -80,7 +80,7 @@ static void drawAcsii() {
     printCenteredLine("|                    |", console_width);
     printCenteredLine("|  ________________  |", console_width);
     printCenteredLine("| |                | |", console_width);
-    printCenteredLine("| |  COMPUTER WIN  | |", console_width);
+    printCenteredLine("| |    ITS DRAW    | |", console_width);
     printCenteredLine("| |________________| |", console_width);
     printCenteredLine("|                    |", console_width);
     printCenteredLine("|____________________|", console_width);
